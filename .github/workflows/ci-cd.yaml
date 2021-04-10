@@ -21,6 +21,15 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
+      - name: Start SQL Server
+        run: |
+          docker run -d -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=!Pass-word!' -e 'MSSQL_PID=Express' -p 1433:1433 -d mcr.microsoft.com/mssql/server:latest
+
+      - name: Wait (7s) for SQL Server to Start 💤
+        uses: jakejarvis/wait-action@master
+        with:
+          time: "7s"
+
       - name: Restore dependencies 🛠
         run: dotnet restore
 
@@ -28,6 +37,8 @@ jobs:
         run: dotnet build -c Release --no-restore
 
       - name: Run automated tests 🧪🧪
+        env:
+          ConnectionStrings__DefaultConnection: Server=localhost;Database=CiCdDemo_Test;User=sa;Password=!Pass-word!
         run: dotnet test -c Release --no-build
 
       - name: Publish app 📰
